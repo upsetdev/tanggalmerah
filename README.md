@@ -26,7 +26,7 @@ Showcasing who is using the Tanggal Merah API:
 ## Quick Start
 
 ```bash
-git clone https://github.com/fransallen/tanggalmerah.git
+git clone https://github.com/upsetdev/tanggalmerah.git
 cd tanggalmerah
 
 bun install
