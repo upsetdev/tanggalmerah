@@ -44,7 +44,7 @@ Or connect the repository in the Cloudflare dashboard (Workers Builds)
 with `bun run build` as the build command and `bun run deploy` as the
 deploy command. The build bundles the Worker into `dist/` without
 deploying, which catches bundling errors early. The custom domain is
-configured in `wrangler.jsonc`.
+managed in the Cloudflare dashboard, not in `wrangler.jsonc`.
 
 ---
 

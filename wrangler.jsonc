@@ -3,6 +3,5 @@
   "name": "tanggalmerah",
   "main": "src/index.ts",
   "compatibility_date": "2026-10-01",
-  "routes": [{ "pattern": "tanggalmerah.upset.dev", "custom_domain": true }],
   "observability": { "enabled": true }
 }
