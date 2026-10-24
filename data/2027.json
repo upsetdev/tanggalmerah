@@ -1,0 +1,161 @@
+{
+  "year": 2027,
+  "holidays": [
+    {
+      "date": "2027-01-01",
+      "day": "Jumat",
+      "name": "Tahun Baru 2027 Masehi",
+      "type": "holiday"
+    },
+    {
+      "date": "2027-01-05",
+      "day": "Selasa",
+      "name": "Isra Mi'raj Nabi Muhammad SAW",
+      "type": "holiday"
+    },
+    {
+      "date": "2027-02-05",
+      "day": "Jumat",
+      "name": "Tahun Baru Imlek 2578 Kongzili",
+      "type": "leave"
+    },
+    {
+      "date": "2027-02-06",
+      "day": "Sabtu",
+      "name": "Tahun Baru Imlek 2578 Kongzili",
+      "type": "holiday"
+    },
+    {
+      "date": "2027-03-08",
+      "day": "Senin",
+      "name": "Hari Suci Nyepi Tahun Baru Saka 1949",
+      "type": "holiday"
+    },
+    {
+      "date": "2027-03-09",
+      "day": "Selasa",
+      "name": "Hari Raya Idul Fitri 1448 Hijriyah",
+      "type": "leave"
+    },
+    {
+      "date": "2027-03-10",
+      "day": "Rabu",
+      "name": "Hari Raya Idul Fitri 1448 Hijriyah",
+      "type": "holiday"
+    },
+    {
+      "date": "2027-03-11",
+      "day": "Kamis",
+      "name": "Hari Raya Idul Fitri 1448 Hijriyah",
+      "type": "holiday"
+    },
+    {
+      "date": "2027-03-12",
+      "day": "Jumat",
+      "name": "Hari Raya Idul Fitri 1448 Hijriyah",
+      "type": "leave"
+    },
+    {
+      "date": "2027-03-15",
+      "day": "Senin",
+      "name": "Hari Raya Idul Fitri 1448 Hijriyah",
+      "type": "leave"
+    },
+    {
+      "date": "2027-03-25",
+      "day": "Kamis",
+      "name": "Wafat Yesus Kristus / Jumat Agung",
+      "type": "leave"
+    },
+    {
+      "date": "2027-03-26",
+      "day": "Jumat",
+      "name": "Wafat Yesus Kristus / Jumat Agung",
+      "type": "holiday"
+    },
+    {
+      "date": "2027-03-28",
+      "day": "Minggu",
+      "name": "Kebangkitan Yesus Kristus (Paskah)",
+      "type": "holiday"
+    },
+    {
+      "date": "2027-05-01",
+      "day": "Sabtu",
+      "name": "Hari Buruh Internasional",
+      "type": "holiday"
+    },
+    {
+      "date": "2027-05-06",
+      "day": "Kamis",
+      "name": "Kenaikan Yesus Kristus",
+      "type": "holiday"
+    },
+    {
+      "date": "2027-05-17",
+      "day": "Senin",
+      "name": "Hari Raya Idul Adha 1448 Hijriyah",
+      "type": "holiday"
+    },
+    {
+      "date": "2027-05-18",
+      "day": "Selasa",
+      "name": "Hari Raya Idul Adha 1448 Hijriyah",
+      "type": "leave"
+    },
+    {
+      "date": "2027-05-19",
+      "day": "Rabu",
+      "name": "Hari Raya Waisak 2571 BE",
+      "type": "leave"
+    },
+    {
+      "date": "2027-05-20",
+      "day": "Kamis",
+      "name": "Hari Raya Waisak 2571 BE",
+      "type": "holiday"
+    },
+    {
+      "date": "2027-06-01",
+      "day": "Selasa",
+      "name": "Hari Lahir Pancasila",
+      "type": "holiday"
+    },
+    {
+      "date": "2027-06-06",
+      "day": "Minggu",
+      "name": "Tahun Baru Islam 1449 Hijriyah",
+      "type": "holiday"
+    },
+    {
+      "date": "2027-08-15",
+      "day": "Minggu",
+      "name": "Maulid Nabi Muhammad SAW",
+      "type": "holiday"
+    },
+    {
+      "date": "2027-08-17",
+      "day": "Selasa",
+      "name": "Hari Kemerdekaan Republik Indonesia",
+      "type": "holiday"
+    },
+    {
+      "date": "2027-12-24",
+      "day": "Jumat",
+      "name": "Hari Raya Natal",
+      "type": "leave"
+    },
+    {
+      "date": "2027-12-25",
+      "day": "Sabtu",
+      "name": "Hari Raya Natal",
+      "type": "holiday"
+    },
+    {
+      "date": "2027-12-26",
+      "day": "Minggu",
+      "name": "Isra Mi'raj Nabi Muhammad SAW",
+      "type": "holiday"
+    }
+  ]
+}

@@ -300,7 +300,8 @@ tanggalmerah/
 │   ├── 2023.json
 │   ├── 2024.json
 │   ├── 2025.json
-│   └── 2026.json
+│   ├── 2026.json
+│   └── 2027.json
 ├── wrangler.jsonc                    # Cloudflare Workers config
 ├── tsconfig.json
 └── package.json
