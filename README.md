@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🟥 Tanggal Merah API
+# 📅 Tanggal Merah API
 
 **A fast, free REST API for Indonesian public holidays and collective leave days.**
 
