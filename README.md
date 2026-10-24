@@ -472,4 +472,4 @@ This project is not affiliated with the Government of Indonesia. The data is com
 
 ## License
 
-[MIT](LICENSE) © 2026 Frans Allen
+[MIT](LICENSE)
