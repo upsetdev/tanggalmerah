@@ -351,24 +351,80 @@ Spotted a mistake or a missing year? See [Contributing](#contributing).
 
 ## Self-Hosting
 
-Tanggal Merah runs on [Cloudflare Workers](https://workers.cloudflare.com), and the free plan is enough. You need [Bun](https://bun.sh) and a Cloudflare account.
+Want your own instance? Tanggal Merah runs on [Cloudflare Workers](https://workers.cloudflare.com), and the free plan is more than enough. Pick whichever deploy method suits you, then optionally add a custom domain.
+
+**Prerequisites:** [Bun](https://bun.sh) and a [Cloudflare account](https://dash.cloudflare.com/sign-up).
+
+### Option A: Deploy from your terminal
+
+1. **Clone and install**
+
+   ```bash
+   git clone https://github.com/upsetdev/tanggalmerah.git
+   cd tanggalmerah
+   bun install
+   ```
+
+2. **Log in to Cloudflare.** This opens a browser window to authorize Wrangler.
+
+   ```bash
+   bunx wrangler login
+   ```
+
+3. **Deploy**
+
+   ```bash
+   bun run deploy
+   ```
+
+   Wrangler prints your Worker's URL when it finishes, e.g. `https://tanggalmerah.<your-subdomain>.workers.dev`. Your API is live there.
+
+### Option B: Deploy from the Cloudflare dashboard
+
+Best if you want every push to deploy automatically.
+
+1. Fork this repository on GitHub.
+2. In the [Cloudflare dashboard](https://dash.cloudflare.com), go to **Workers & Pages → Create → Import a repository** and pick your fork.
+3. Use these build settings:
+
+   | Setting        | Value            |
+   | -------------- | ---------------- |
+   | Build command  | `bun run build`  |
+   | Deploy command | `bun run deploy` |
+
+4. Click **Deploy**. Later pushes to your production branch redeploy automatically.
+
+### Adding a custom domain
+
+By default the API is served on `*.workers.dev`. To use your own domain, such as `holidays.example.com`, the domain's DNS must be managed by Cloudflare. Then choose one of these:
+
+**From the dashboard (simplest).** Open your Worker, go to **Settings → Domains & Routes → Add → Custom domain**, and enter the hostname. Cloudflare creates the DNS record and TLS certificate for you.
+
+**From `wrangler.jsonc` (kept in code).** Add a `routes` entry, then redeploy:
+
+```jsonc
+{
+  "name": "tanggalmerah",
+  // …
+  "routes": [{ "pattern": "holidays.example.com", "custom_domain": true }]
+}
+```
+
+> [!IMPORTANT]
+> The hostname must not already have a DNS record. If it does, for example because it points at an old server, delete that record first. Otherwise deployment fails with _"Hostname already has externally managed DNS records"_.
+
+Once your custom domain works, you can turn off the `workers.dev` URL by adding `"workers_dev": false` to `wrangler.jsonc`.
+
+### Updating your instance
+
+New holiday data lands in this repository as new years are announced. To pick it up, pull the latest changes, or sync your fork, and redeploy:
 
 ```bash
-git clone https://github.com/upsetdev/tanggalmerah.git
-cd tanggalmerah
-bun install
-bunx wrangler login
+git pull
 bun run deploy
 ```
 
-To deploy from the Cloudflare dashboard instead, connect the repository under **Workers & Pages → Create → Import a repository** and use these settings:
-
-| Setting        | Value            |
-| -------------- | ---------------- |
-| Build command  | `bun run build`  |
-| Deploy command | `bun run deploy` |
-
-Custom domains are configured in the Cloudflare dashboard, not in `wrangler.jsonc`.
+With Option B, syncing your fork on GitHub is enough.
 
 ---
 
