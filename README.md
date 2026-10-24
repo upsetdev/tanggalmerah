@@ -1,6 +1,6 @@
 # Tanggal Merah API
 
-A lightweight, **zero-dependency** REST API for Indonesian public holidays and collective leave days, built with Go standard library only.
+A lightweight, **zero-dependency** REST API for Indonesian public holidays and collective leave days, running on Cloudflare Workers.
 
 > **Tanggal merah** (lit. _red date_) is the Indonesian term for a public holiday — the days marked in red on a calendar.
 
@@ -10,11 +10,10 @@ A lightweight, **zero-dependency** REST API for Indonesian public holidays and c
 - Two types: **`holiday`** (hari libur nasional) and **`leave`** (cuti bersama)
 - Date check endpoint returns `is_holiday`, `is_leave`, and `is_off_day`
 - `year` defaults to the current year when omitted
-- In-memory cache per year — fast after first load
-- Graceful shutdown, structured JSON logging, CORS-ready
-- Multi-stage Docker build producing a minimal `scratch` image
-- Full test suite (`go test ./...`)
-- Zero external dependencies — Go 1.22 stdlib only
+- Holiday data bundled into the Worker — no storage lookups at request time
+- CORS-ready, 30-day `Cache-Control` on API responses
+- Full test suite (`pnpm test`)
+- Zero runtime dependencies — Workers platform APIs only
 
 ## Used by
 
@@ -30,31 +29,26 @@ Showcasing who is using the Tanggal Merah API:
 git clone https://github.com/fransallen/tanggalmerah.git
 cd tanggalmerah
 
-air
-# http://localhost:8080
+pnpm install
+pnpm dev
+# http://localhost:8787
 ```
 
-### Docker
+### Deploy
 
 ```bash
-docker build -t tanggalmerah .
-docker run -p 8080:8080 tanggalmerah
+pnpm run deploy
 ```
 
----
-
-## Configuration
-
-| Variable   | Default | Description                            |
-| ---------- | ------- | -------------------------------------- |
-| `PORT`     | `8080`  | Port the HTTP server listens on        |
-| `DATA_DIR` | `data`  | Directory containing `YEAR.json` files |
+Pushes to `main` deploy automatically via GitHub Actions. The workflow
+needs `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` repository secrets.
+The custom domain is configured in `wrangler.jsonc`.
 
 ---
 
 ## API Reference
 
-**Base URL:** `http://localhost:8080`
+**Base URL:** `https://tanggalmerah.upset.dev`
 
 ### Response Envelope
 
@@ -97,7 +91,7 @@ Redirects to the web interface for the current year.
 ### `GET /health`
 
 ```bash
-curl http://localhost:8080/health
+curl https://tanggalmerah.upset.dev/health
 ```
 
 ```json
@@ -111,7 +105,7 @@ curl http://localhost:8080/health
 List all years that have available data.
 
 ```bash
-curl http://localhost:8080/api/years
+curl https://tanggalmerah.upset.dev/api/years
 ```
 
 ```json
@@ -136,16 +130,16 @@ Query holidays by year and optional month, with type filters.
 
 ```bash
 # All holidays for the current year
-curl "http://localhost:8080/api/holidays"
+curl "https://tanggalmerah.upset.dev/api/holidays"
 
 # All 2026 holidays
-curl "http://localhost:8080/api/holidays?year=2026"
+curl "https://tanggalmerah.upset.dev/api/holidays?year=2026"
 
 # March only
-curl "http://localhost:8080/api/holidays?year=2026&month=3"
+curl "https://tanggalmerah.upset.dev/api/holidays?year=2026&month=3"
 
 # Only collective leave days in March
-curl "http://localhost:8080/api/holidays?year=2026&month=3&type=leave"
+curl "https://tanggalmerah.upset.dev/api/holidays?year=2026&month=3&type=leave"
 ```
 
 **Example response:**
@@ -188,7 +182,7 @@ curl "http://localhost:8080/api/holidays?year=2026&month=3&type=leave"
 Check whether a specific date is a public holiday, collective leave day, or a regular workday.
 
 ```bash
-curl "http://localhost:8080/api/check?date=2026-03-21"
+curl "https://tanggalmerah.upset.dev/api/check?date=2026-03-21"
 ```
 
 ```json
@@ -212,7 +206,7 @@ curl "http://localhost:8080/api/check?date=2026-03-21"
 ```
 
 ```bash
-curl "http://localhost:8080/api/check?date=2026-03-20"
+curl "https://tanggalmerah.upset.dev/api/check?date=2026-03-20"
 ```
 
 ```json
@@ -236,7 +230,7 @@ curl "http://localhost:8080/api/check?date=2026-03-20"
 ```
 
 ```bash
-curl "http://localhost:8080/api/check?date=2026-03-25"
+curl "https://tanggalmerah.upset.dev/api/check?date=2026-03-25"
 ```
 
 ```json
@@ -286,7 +280,7 @@ Each year's data lives in `data/YYYY.json`:
 }
 ```
 
-To add a new year: drop a `YYYY.json` file into the `data/` folder and restart the server.
+To add a new year: drop a `YYYY.json` file into the `data/` folder, import it in `src/data.ts`, and redeploy.
 
 ---
 
@@ -294,28 +288,22 @@ To add a new year: drop a `YYYY.json` file into the `data/` folder and restart t
 
 ```
 tanggalmerah/
-├── cmd/server/
-│   ├── main.go                       # Entry point, router, middleware, graceful shutdown
-│   └── main_test.go                  # Tests for middleware and helpers
-├── internal/
-│   ├── handler/
-│   │   ├── handler.go                # HTTP handlers
-│   │   └── handler_test.go           # Tests
-│   ├── model/
-│   │   └── model.go                  # Domain types and response envelopes
-│   └── repository/
-│       ├── repository.go             # JSON loading, in-memory cache, filter helpers
-│       └── repository_test.go        # Tests
+├── src/
+│   ├── index.ts                      # Worker entry point
+│   ├── app.ts                        # Router and shared response headers
+│   ├── handler.ts                    # Endpoint handlers and filter helpers
+│   ├── data.ts                       # Bundled holiday data
+│   └── model.ts                      # Domain types and response shapes
+├── test/
+│   └── app.test.ts                   # Tests
 ├── data/
 │   ├── 2023.json
 │   ├── 2024.json
 │   ├── 2025.json
 │   └── 2026.json
-├── .air.toml                         # Live-reload config (air)
-├── Dockerfile
-├── go.mod
-├── package.json
-└── README.md
+├── wrangler.jsonc                    # Cloudflare Workers config
+├── tsconfig.json
+└── package.json
 ```
 
 ---
@@ -323,8 +311,8 @@ tanggalmerah/
 ## Running Tests
 
 ```bash
-go test ./...
-go test ./... -v -race
+pnpm test
+pnpm typecheck
 ```
 
 ---
@@ -334,7 +322,7 @@ go test ./... -v -race
 Pull requests are welcome! The most valuable contribution is adding official data for years not yet covered.
 
 1. Fork the repository
-2. Create `data/YYYY.json` following the schema above
+2. Create `data/YYYY.json` following the schema above and import it in `src/data.ts`
 3. Verify the data against the official government decree (_Surat Keputusan Bersama_)
 4. Include both `holiday` and `leave` entries where applicable
 5. Open a pull request

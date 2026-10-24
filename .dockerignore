@@ -1,7 +1,0 @@
-.docker*
-.git*
-.air.toml
-Dockerfile
-package.json
-node_modules/
-bun.lock

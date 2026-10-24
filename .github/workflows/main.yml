@@ -1,25 +1,29 @@
-name: Create docker image & deploy to Swarm
+name: Test & deploy to Cloudflare Workers
 
 on:
   push:
     branches:
       - main
+  pull_request:
 
 jobs:
-  build:
-    name: Build, push, and deploy
+  deploy:
+    name: Test and deploy
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - name: Build image
-        run: |
-          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io --username ${{ github.repository_owner }} --password-stdin
-          docker build -t ghcr.io/${{ github.repository }} .
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm test
 
-      - name: Push to ghcr.io
-        run: |
-          docker push ghcr.io/${{ github.repository}}
-
-      - name: Deploy to Swarm
-        run: |
-          curl -sSf -X POST "${{ secrets.DOCKER_SWARM_WEBHOOK_URL }}"
+      - name: Deploy
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: pnpm run deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
