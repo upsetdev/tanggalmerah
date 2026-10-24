@@ -302,6 +302,7 @@ tanggalmerah/
 │   ├── 2025.json
 │   ├── 2026.json
 │   └── 2027.json
+├── CONTRIBUTING.md                   # Contribution and data guidelines
 ├── wrangler.jsonc                    # Cloudflare Workers config
 ├── tsconfig.json
 └── package.json
@@ -320,13 +321,7 @@ bun run typecheck
 
 ## Contributing
 
-Pull requests are welcome! The most valuable contribution is adding official data for years not yet covered.
-
-1. Fork the repository
-2. Create `data/YYYY.json` following the schema above and import it in `src/data.ts`
-3. Verify the data against the official government decree (_Surat Keputusan Bersama_)
-4. Include both `holiday` and `leave` entries where applicable
-5. Open a pull request
+Pull requests are welcome! The most valuable contribution is adding official data for years not yet covered. See [CONTRIBUTING.md](CONTRIBUTING.md) for the data guidelines and development setup.
 
 ---
 
