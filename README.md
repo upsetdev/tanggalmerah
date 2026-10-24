@@ -1,150 +1,184 @@
-# Tanggal Merah API
+<div align="center">
 
-A lightweight, **zero-dependency** REST API for Indonesian public holidays and collective leave days, running on Cloudflare Workers.
+# 🟥 Tanggal Merah API
 
-> **Tanggal merah** (lit. _red date_) is the Indonesian term for a public holiday — the days marked in red on a calendar.
+**A fast, free REST API for Indonesian public holidays and collective leave days.**
+
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Cloudflare Workers](https://img.shields.io/badge/runs%20on-Cloudflare%20Workers-F38020?logo=cloudflare&logoColor=white)](https://workers.cloudflare.com)
+[![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)](tsconfig.json)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+
+[API Reference](#api-reference) · [Data Coverage](#data-coverage) · [Self-Hosting](#self-hosting) · [Contributing](CONTRIBUTING.md)
+
+</div>
+
+> **Tanggal merah** (lit. _red date_) is the Indonesian term for a public holiday: the days printed in red on a calendar.
+
+```bash
+curl "https://tanggalmerah.upset.dev/api/check?date=2026-08-17"
+```
+
+```json
+{
+  "success": true,
+  "data": {
+    "date": "2026-08-17",
+    "is_holiday": true,
+    "is_leave": false,
+    "is_off_day": true,
+    "holidays": [
+      {
+        "date": "2026-08-17",
+        "day": "Senin",
+        "name": "Hari Kemerdekaan Republik Indonesia",
+        "type": "holiday"
+      }
+    ]
+  }
+}
+```
 
 ## Features
 
-- Query holidays by year, year + month, or specific date
-- Two types: **`holiday`** (hari libur nasional) and **`leave`** (cuti bersama)
-- Date check endpoint returns `is_holiday`, `is_leave`, and `is_off_day`
-- `year` defaults to the current year when omitted
-- Holiday data bundled into the Worker — no storage lookups at request time
-- CORS-ready, 30-day `Cache-Control` on API responses
-- Full test suite (`bun run test`)
-- Zero runtime dependencies — Workers platform APIs only
+- 📅 **Holidays and collective leave.** Covers both _hari libur nasional_ and _cuti bersama_, sourced from the official government decree.
+- ✅ **One-call date check.** Ask whether any date is a day off, with `is_holiday`, `is_leave` and `is_off_day` flags.
+- 🔎 **Flexible filters.** Query by year, month and type.
+- ⚡ **Fast at the edge.** Runs on Cloudflare Workers with the data bundled in, so no database lookups at request time.
+- 🌐 **Browser-ready.** CORS enabled for any origin, with 30-day `Cache-Control` headers.
+- 🪶 **Zero runtime dependencies.** Only Workers platform APIs.
+- 🔓 **Free and open source.** No API key, no sign-up, MIT licensed.
 
-## Used by
-
-Showcasing who is using the Tanggal Merah API:
+## Used By
 
 - [TanggalanJawa.com](https://tanggalanjawa.com)
 
+_Using Tanggal Merah in your project? [Open a pull request](https://github.com/upsetdev/tanggalmerah/pulls) to add it here._
+
 ---
+
+## Table of Contents
+
+- [Quick Start](#quick-start)
+- [API Reference](#api-reference)
+  - [Conventions](#conventions)
+  - [`GET /api/holidays`](#get-apiholidays)
+  - [`GET /api/check`](#get-apicheck)
+  - [`GET /api/years`](#get-apiyears)
+  - [`GET /health`](#get-health)
+  - [Errors](#errors)
+- [Data Coverage](#data-coverage)
+- [Self-Hosting](#self-hosting)
+- [Development](#development)
+- [Contributing](#contributing)
+- [Disclaimer](#disclaimer)
+- [License](#license)
 
 ## Quick Start
 
-```bash
-git clone https://github.com/upsetdev/tanggalmerah.git
-cd tanggalmerah
+The public API is available at **`https://tanggalmerah.upset.dev`**. No authentication is required.
 
-bun install
-bun run dev
-# http://localhost:8787
+**JavaScript**
+
+```js
+const res = await fetch("https://tanggalmerah.upset.dev/api/holidays?year=2026");
+const { data } = await res.json();
+
+for (const h of data) {
+  console.log(h.date, h.name, h.type);
+}
 ```
 
-### Deploy
+**Python**
 
-```bash
-bun run deploy
+```python
+import requests
+
+r = requests.get("https://tanggalmerah.upset.dev/api/check", params={"date": "2026-03-20"})
+print(r.json()["data"]["is_off_day"])  # True
 ```
-
-Or connect the repository in the Cloudflare dashboard (Workers Builds)
-with `bun run build` as the build command and `bun run deploy` as the
-deploy command. The build bundles the Worker into `dist/` without
-deploying, which catches bundling errors early. The custom domain is
-managed in the Cloudflare dashboard, not in `wrangler.jsonc`.
 
 ---
 
 ## API Reference
 
-**Base URL:** `https://tanggalmerah.upset.dev`
+| Method | Endpoint        | Description                                    |
+| ------ | --------------- | ---------------------------------------------- |
+| `GET`  | `/api/holidays` | List holidays for a year, optionally filtered  |
+| `GET`  | `/api/check`    | Check whether a specific date is a day off     |
+| `GET`  | `/api/years`    | List years with available data                 |
+| `GET`  | `/health`       | Service health check                           |
+| `GET`  | `/`             | Redirects to the project page                  |
 
-### Response Envelope
+### Conventions
 
-All successful responses:
+**Success envelope**
 
 ```json
 {
   "success": true,
-  "data": "...",
-  "meta": {
-    "total": 25,
-    "total_holidays": 17,
-    "total_leave": 8,
-    "year": 2026
-  }
+  "data": "…",
+  "meta": { "total": 4, "total_leave": 4, "year": 2026, "month": 3 }
 }
 ```
 
-All error responses:
+`meta` is present on list endpoints only. Fields with a value of zero are omitted.
+
+**Error envelope**
 
 ```json
 { "success": false, "error": "Human-readable message", "code": "ERROR_CODE" }
 ```
 
-### Holiday Types
+**Holiday object**
 
-| `type`    | Description                                           |
-| --------- | ----------------------------------------------------- |
-| `holiday` | Hari Libur Nasional — mandatory day off               |
-| `leave`   | Cuti Bersama — government-designated bridge/leave day |
+| Field  | Type   | Description                                        |
+| ------ | ------ | -------------------------------------------------- |
+| `date` | string | ISO 8601 date, `YYYY-MM-DD`                        |
+| `day`  | string | Indonesian day name, e.g. `Senin`                  |
+| `name` | string | Holiday name in Indonesian                         |
+| `type` | string | `holiday` or `leave`                               |
 
----
+**Holiday types**
 
-### `GET /`
+| `type`    | Indonesian          | Description                                   |
+| --------- | ------------------- | --------------------------------------------- |
+| `holiday` | Hari Libur Nasional | National public holiday, a mandatory day off  |
+| `leave`   | Cuti Bersama        | Government-designated collective leave day    |
 
-Redirects to the web interface for the current year.
+**Response headers**
 
----
-
-### `GET /health`
-
-```bash
-curl https://tanggalmerah.upset.dev/health
-```
-
-```json
-{ "status": "ok", "version": "1.0.0", "time": "2026-01-01T00:00:00Z" }
-```
-
----
-
-### `GET /api/years`
-
-List all years that have available data.
-
-```bash
-curl https://tanggalmerah.upset.dev/api/years
-```
-
-```json
-{
-  "success": true,
-  "data": [2023, 2024, 2025, 2026, 2027],
-  "meta": { "total": 5 }
-}
-```
+| Header                        | Value                                         |
+| ----------------------------- | --------------------------------------------- |
+| `Access-Control-Allow-Origin` | `*`                                           |
+| `Cache-Control`               | `public, max-age=2592000` (except `/health`)  |
+| `X-API-Version`               | API version, e.g. `1.0.0`                     |
 
 ---
 
 ### `GET /api/holidays`
 
-Query holidays by year and optional month, with type filters.
+List all holidays for a year, optionally filtered by month and type.
 
-| Query param | Values                        | Required | Default      |
-| ----------- | ----------------------------- | -------- | ------------ |
-| `year`      | `1900`–`2100`                 | No       | current year |
-| `month`     | `1`–`12`                      | No       | —            |
-| `type`      | `holiday` \| `leave` \| `all` | No       | `all`        |
+| Parameter | Required | Values                        | Default |
+| --------- | -------- | ----------------------------- | ------- |
+| `year`    | **Yes**  | `1900`–`2100`                 | –       |
+| `month`   | No       | `1`–`12`                      | –       |
+| `type`    | No       | `holiday` \| `leave` \| `all` | `all`   |
 
 ```bash
-# All holidays for the current year
-curl "https://tanggalmerah.upset.dev/api/holidays"
-
-# All 2026 holidays
+# All holidays in 2026
 curl "https://tanggalmerah.upset.dev/api/holidays?year=2026"
 
-# March only
-curl "https://tanggalmerah.upset.dev/api/holidays?year=2026&month=3"
+# August 2026 only
+curl "https://tanggalmerah.upset.dev/api/holidays?year=2026&month=8"
 
-# Only collective leave days in March
+# Collective leave days in March 2026
 curl "https://tanggalmerah.upset.dev/api/holidays?year=2026&month=3&type=leave"
 ```
 
-**Example response:**
+<details>
+<summary><b>Example response</b></summary>
 
 ```json
 {
@@ -155,61 +189,55 @@ curl "https://tanggalmerah.upset.dev/api/holidays?year=2026&month=3&type=leave"
       "day": "Rabu",
       "name": "Hari Suci Nyepi Tahun Baru Saka 1948",
       "type": "leave"
+    },
+    {
+      "date": "2026-03-20",
+      "day": "Jumat",
+      "name": "Hari Raya Idul Fitri 1447 Hijriyah",
+      "type": "leave"
+    },
+    {
+      "date": "2026-03-23",
+      "day": "Senin",
+      "name": "Hari Raya Idul Fitri 1447 Hijriyah",
+      "type": "leave"
+    },
+    {
+      "date": "2026-03-24",
+      "day": "Selasa",
+      "name": "Hari Raya Idul Fitri 1447 Hijriyah",
+      "type": "leave"
     }
   ],
   "meta": {
-    "total": 1,
-    "total_holidays": 0,
-    "total_leave": 1,
+    "total": 4,
+    "total_leave": 4,
     "year": 2026,
-    "month": 3,
-    "source": "Government of the Republic of Indonesia"
+    "month": 3
   }
 }
 ```
 
-**Error codes**
-
-| Code             | HTTP | When                                    |
-| ---------------- | ---- | --------------------------------------- |
-| `INVALID_YEAR`   | 400  | Year is not a valid integer (1900–2100) |
-| `INVALID_MONTH`  | 400  | Month is not 1–12                       |
-| `INVALID_TYPE`   | 400  | Type is not one of the accepted values  |
-| `YEAR_NOT_FOUND` | 404  | No data file exists for that year       |
+</details>
 
 ---
 
-### `GET /api/check?date=YYYY-MM-DD`
+### `GET /api/check`
 
-Check whether a specific date is a public holiday, collective leave day, or a regular workday.
+Check whether a date is a public holiday, a collective leave day or a regular day.
 
-```bash
-curl "https://tanggalmerah.upset.dev/api/check?date=2026-03-21"
-```
-
-```json
-{
-  "success": true,
-  "data": {
-    "date": "2026-03-21",
-    "is_holiday": true,
-    "is_leave": false,
-    "is_off_day": true,
-    "holidays": [
-      {
-        "date": "2026-03-21",
-        "day": "Sabtu",
-        "name": "Hari Raya Idul Fitri 1447 Hijriyah",
-        "type": "holiday"
-      }
-    ]
-  }
-}
-```
+| Parameter | Required | Values       |
+| --------- | -------- | ------------ |
+| `date`    | **Yes**  | `YYYY-MM-DD` |
 
 ```bash
 curl "https://tanggalmerah.upset.dev/api/check?date=2026-03-20"
 ```
+
+<details>
+<summary><b>Example responses</b></summary>
+
+A collective leave day:
 
 ```json
 {
@@ -231,9 +259,7 @@ curl "https://tanggalmerah.upset.dev/api/check?date=2026-03-20"
 }
 ```
 
-```bash
-curl "https://tanggalmerah.upset.dev/api/check?date=2026-03-25"
-```
+A regular day (`holidays` is omitted):
 
 ```json
 {
@@ -247,86 +273,147 @@ curl "https://tanggalmerah.upset.dev/api/check?date=2026-03-25"
 }
 ```
 
-> If no data file exists for the year of the requested date, the endpoint returns `200` with all flags `false` rather than `404`.
+</details>
 
-**Error codes**
-
-| Code           | HTTP | When                                 |
-| -------------- | ---- | ------------------------------------ |
-| `MISSING_DATE` | 400  | `date` query param is absent         |
-| `INVALID_DATE` | 400  | `date` is not in `YYYY-MM-DD` format |
+> [!NOTE]
+> `is_off_day` covers holidays and collective leave only. Weekends are not flagged.
+> For a year without data, this endpoint returns `200` with all flags `false` rather than `404`.
 
 ---
 
-## Data Format
+### `GET /api/years`
 
-Each year's data lives in `data/YYYY.json`:
+List every year that has holiday data.
+
+```bash
+curl "https://tanggalmerah.upset.dev/api/years"
+```
+
+```json
+{ "success": true, "data": [2023, 2024, 2025, 2026, 2027], "meta": { "total": 5 } }
+```
+
+---
+
+### `GET /health`
+
+```bash
+curl "https://tanggalmerah.upset.dev/health"
+```
+
+```json
+{ "status": "ok", "version": "1.0.0", "time": "2026-01-01T00:00:00Z" }
+```
+
+---
+
+### Errors
+
+| Code                 | HTTP | Endpoint        | When                                      |
+| -------------------- | ---- | --------------- | ----------------------------------------- |
+| `MISSING_YEAR`       | 400  | `/api/holidays` | `year` is missing                         |
+| `INVALID_YEAR`       | 400  | `/api/holidays` | `year` is not an integer from 1900–2100   |
+| `INVALID_MONTH`      | 400  | `/api/holidays` | `month` is not an integer from 1–12       |
+| `INVALID_TYPE`       | 400  | `/api/holidays` | `type` is not `holiday`, `leave` or `all` |
+| `YEAR_NOT_FOUND`     | 404  | `/api/holidays` | No data exists for the requested year     |
+| `MISSING_DATE`       | 400  | `/api/check`    | `date` is missing                         |
+| `INVALID_DATE`       | 400  | `/api/check`    | `date` is not a valid `YYYY-MM-DD` date   |
+| `NOT_FOUND`          | 404  | any             | Unknown endpoint                          |
+| `METHOD_NOT_ALLOWED` | 405  | any             | Method other than `GET`, `HEAD`, `OPTIONS` |
+
+---
+
+## Data Coverage
+
+| Year | Status       |
+| ---- | ------------ |
+| 2027 | ✅ Available |
+| 2026 | ✅ Available |
+| 2025 | ✅ Available |
+| 2024 | ✅ Available |
+| 2023 | ✅ Available |
+
+Data comes from the annual joint ministerial decree (_Surat Keputusan Bersama_ / SKB 3 Menteri) that sets national holidays and collective leave in Indonesia. Each year lives in [`data/YYYY.json`](data):
 
 ```json
 {
   "year": 2026,
   "holidays": [
-    {
-      "date": "2026-01-01",
-      "day": "Kamis",
-      "name": "Tahun Baru 2026 Masehi",
-      "type": "holiday"
-    },
-    {
-      "date": "2026-12-24",
-      "day": "Kamis",
-      "name": "Hari Raya Natal",
-      "type": "leave"
-    }
+    { "date": "2026-01-01", "day": "Kamis", "name": "Tahun Baru 2026 Masehi", "type": "holiday" },
+    { "date": "2026-12-24", "day": "Kamis", "name": "Hari Raya Natal", "type": "leave" }
   ]
 }
 ```
 
-To add a new year: drop a `YYYY.json` file into the `data/` folder, import it in `src/data.ts`, and redeploy.
+Spotted a mistake or a missing year? See [Contributing](#contributing).
 
 ---
 
-## Project Structure
+## Self-Hosting
+
+Tanggal Merah runs on [Cloudflare Workers](https://workers.cloudflare.com), and the free plan is enough. You need [Bun](https://bun.sh) and a Cloudflare account.
+
+```bash
+git clone https://github.com/upsetdev/tanggalmerah.git
+cd tanggalmerah
+bun install
+bunx wrangler login
+bun run deploy
+```
+
+To deploy from the Cloudflare dashboard instead, connect the repository under **Workers & Pages → Create → Import a repository** and use these settings:
+
+| Setting        | Value            |
+| -------------- | ---------------- |
+| Build command  | `bun run build`  |
+| Deploy command | `bun run deploy` |
+
+Custom domains are configured in the Cloudflare dashboard, not in `wrangler.jsonc`.
+
+---
+
+## Development
+
+```bash
+bun install
+bun run dev         # local server at http://localhost:8787
+bun run test        # run the test suite (Vitest)
+bun run typecheck   # type-check with tsc
+bun run build       # bundle into dist/ without deploying
+```
+
+<details>
+<summary><b>Project structure</b></summary>
 
 ```
 tanggalmerah/
 ├── src/
-│   ├── index.ts                      # Worker entry point
-│   ├── app.ts                        # Router and shared response headers
-│   ├── handler.ts                    # Endpoint handlers and filter helpers
-│   ├── data.ts                       # Bundled holiday data
-│   └── model.ts                      # Domain types and response shapes
+│   ├── index.ts         # Worker entry point
+│   ├── app.ts           # Router and shared response headers
+│   ├── handler.ts       # Endpoint handlers and filter helpers
+│   ├── data.ts          # Bundled holiday data
+│   └── model.ts         # Domain types and response shapes
 ├── test/
-│   └── app.test.ts                   # Tests
+│   └── app.test.ts      # Test suite
 ├── data/
-│   ├── 2023.json
-│   ├── 2024.json
-│   ├── 2025.json
-│   ├── 2026.json
-│   └── 2027.json
-├── CONTRIBUTING.md                   # Contribution and data guidelines
-├── wrangler.jsonc                    # Cloudflare Workers config
+│   └── YYYY.json        # One file per year
+├── wrangler.jsonc       # Cloudflare Workers config
 ├── tsconfig.json
 └── package.json
 ```
 
----
-
-## Running Tests
-
-```bash
-bun run test
-bun run typecheck
-```
+</details>
 
 ---
 
 ## Contributing
 
-Pull requests are welcome! The most valuable contribution is adding official data for years not yet covered. See [CONTRIBUTING.md](CONTRIBUTING.md) for the data guidelines and development setup.
+Contributions are welcome! The most valuable help is adding official data for new years and correcting existing entries. Read [CONTRIBUTING.md](CONTRIBUTING.md) for the data guidelines, development setup and commit conventions.
 
----
+## Disclaimer
+
+This project is not affiliated with the Government of Indonesia. The data is compiled from official decrees and checked carefully, but decrees are sometimes revised after publication. For legal, payroll or other critical decisions, verify against the latest official announcement.
 
 ## License
 
-MIT
+[MIT](LICENSE) © 2026 Frans Allen
