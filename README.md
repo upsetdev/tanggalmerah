@@ -12,7 +12,7 @@ A lightweight, **zero-dependency** REST API for Indonesian public holidays and c
 - `year` defaults to the current year when omitted
 - Holiday data bundled into the Worker — no storage lookups at request time
 - CORS-ready, 30-day `Cache-Control` on API responses
-- Full test suite (`pnpm test`)
+- Full test suite (`bun run test`)
 - Zero runtime dependencies — Workers platform APIs only
 
 ## Used by
@@ -29,15 +29,15 @@ Showcasing who is using the Tanggal Merah API:
 git clone https://github.com/fransallen/tanggalmerah.git
 cd tanggalmerah
 
-pnpm install
-pnpm dev
+bun install
+bun run dev
 # http://localhost:8787
 ```
 
 ### Deploy
 
 ```bash
-pnpm run deploy
+bun run deploy
 ```
 
 Pushes to `main` deploy automatically via GitHub Actions. The workflow
@@ -311,8 +311,8 @@ tanggalmerah/
 ## Running Tests
 
 ```bash
-pnpm test
-pnpm typecheck
+bun run test
+bun run typecheck
 ```
 
 ---
