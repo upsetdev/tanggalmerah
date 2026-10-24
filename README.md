@@ -40,9 +40,9 @@ bun run dev
 bun run deploy
 ```
 
-Pushes to `main` deploy automatically via GitHub Actions. The workflow
-needs `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` repository secrets.
-The custom domain is configured in `wrangler.jsonc`.
+Or connect the repository in the Cloudflare dashboard (Workers Builds)
+with `bun run deploy` as the deploy command. The custom domain is
+configured in `wrangler.jsonc`.
 
 ---
 
